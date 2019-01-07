@@ -9,18 +9,25 @@ let db = admin.firestore();
 let settings = { timestampsInSnapshots: true };
 db.settings(settings);
 
-// // Create and Deploy Your First Cloud Functions
-// // https://firebase.google.com/docs/functions/write-firebase-functions
-//
-// exports.helloWorld = functions.https.onRequest((request, response) => {
-//  response.send("Hello from Firebase!");
-// });
+exports.getLeaders = functions.https.onRequest(async (request, response)=> {
+    try{
+        let response = await axios.get("https://uplabs.com/leaderboards");
+        await batchDelete("leaders");
+        let users = parseHTML(response.data);
+        await batchInsert(users, (user)=> db.collection("leaders").doc(user.nickname));
+        response.status(200);
+        response.json(users);
+    } catch(error){
+        response.status(500);
+        response.json({error: error.message});
+    }
+});
 
 function parseHTML(html) {
     let $ = cheerio.load(html);
     let users = [];
     $("tr").each(function(index, element) {
-        if (index != 0) {
+        if (index !== 0) {
             users.push({
                 rank: $(this).find(".leaderboard__table-col-rank").text().trim(),
                 avatar_url: $(this).find(".leaderboard__user-avatar").attr("src"),
