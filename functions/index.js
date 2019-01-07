@@ -16,6 +16,26 @@ db.settings(settings);
 //  response.send("Hello from Firebase!");
 // });
 
+function parseHTML(html) {
+    let $ = cheerio.load(html);
+    let users = [];
+    $("tr").each(function(index, element) {
+        if (index != 0) {
+            users.push({
+                rank: $(this).find(".leaderboard__table-col-rank").text().trim(),
+                avatar_url: $(this).find(".leaderboard__user-avatar").attr("src"),
+                nickname: $(this).find(".leaderboard__user-avatar").attr("alt"),
+                full_name: $(this).find(".leaderboard__table-username").text().trim(),
+                gold_medals_count: $(this).find(".leaderboard__table-col-medal--gold").text().trim(),
+                silver_medals_count: $(this).find(".leaderboard__table-col-medal--silver").text().trim(),
+                bronze_medals_count: $(this).find(".leaderboard__table-col-medal--bronze").text().trim(),
+                points: $(this).find(".leaderboard__table-col-points").text().trim()
+            });
+        }
+    });
+    return users;
+}
+
 async function batchInsert(objects, referenceProvider) {
     let batch = db.batch();
     for(let object of objects) {
